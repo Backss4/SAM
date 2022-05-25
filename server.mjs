@@ -35,17 +35,18 @@ app.post('/login', async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password)
     console.log(validPassword)
     console.log(user)
-    if(!user || !validPassword) {
+    if(!user || !validPassword || !user.active) {
       res.status(401).json()
     } else {
-      res.json({jwt: generateAccessToken(user.id, user.username, 'admin')})
+      res.json({jwt: generateAccessToken(user.id, user.username, user.role)})
     }
   }
 })
 
 app.post('/register', async (req, res) => {
   const {username, password} = req.body
-  if(!username || !password) {
+  const user = await prisma.user.findFirst({where: {username: username}})
+  if(!username || !password || user) {
     res.status(400).json()
   } else {
     const salt = await bcrypt.genSalt(10)
