@@ -19,8 +19,8 @@ const secret = process.env.SECRET
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
-function generateAccessToken(username, role) {
-  return jwt.sign({username, role}, secret, { expiresIn: '1800s' })
+function generateAccessToken(id, username, role) {
+  return jwt.sign({id, username, role}, secret, { expiresIn: '7d' })
 }
 
 
@@ -36,7 +36,7 @@ app.post('/login', async (req, res) => {
     if(!user || !validPassword) {
       res.status(401).json()
     } else {
-      res.json({jwt: generateAccessToken(user.username, 'admin')})
+      res.json({jwt: generateAccessToken(user.id, user.username, 'admin')})
     }
   }
 })
