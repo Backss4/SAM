@@ -5,6 +5,7 @@ import createError from 'http-errors';
 import { config } from 'dotenv'
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt'
+import cors from 'cors'
 config({path: './'})
 // var path = require('path');
 // var logger = require('morgan');
@@ -18,6 +19,7 @@ const secret = process.env.SECRET
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+app.use(cors())
 
 function generateAccessToken(id, username, role) {
   return jwt.sign({id, username, role}, secret, { expiresIn: '7d' })
