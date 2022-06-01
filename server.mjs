@@ -1,70 +1,86 @@
-import { PrismaClient } from '@prisma/client'
-import express from 'express'
-import expressjwt from 'express-jwt';
-import createError from 'http-errors';
-import { config } from 'dotenv'
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt'
-import cors from 'cors'
-config({path: './'})
-// var path = require('path');
-// var logger = require('morgan');
-const prisma = new PrismaClient()
-const app = express()
+import { Prisma, PrismaClient } from "@prisma/client";
+import express from "express";
+import { config } from "dotenv";
+import bcrypt from "bcrypt";
+import cors from "cors";
+import { generateAccessToken } from "./utils/index.mjs";
 
-const port = 3001
+config({ path: "./" });
 
-const basicUserStatus = Boolean(Number(process.env.BASIC_USER_STATUS))
-const secret = process.env.SECRET
+const prisma = new PrismaClient();
+const app = express();
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
-app.use(cors())
+const port = 3001;
 
-function generateAccessToken(id, username, role) {
-  return jwt.sign({id, username, role}, secret, { expiresIn: '7d' })
-}
+const basicUserStatus = Boolean(Number(process.env.BASIC_USER_STATUS));
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cors());
 
-app.post('/login', async (req, res) => {
-  const {username, password} = req.body
-  if(!username || !password) {
-    res.status(400).json()
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    res.status(400).json();
   } else {
-    const user = await prisma.user.findFirst({where: {username: username}})
-    const validPassword = await bcrypt.compare(password, user.password)
-    console.log(validPassword)
-    console.log(user)
-    if(!user || !validPassword || !user.active) {
-      res.status(401).json()
+    const user = await prisma.user.findFirst({ where: { username: username } });
+    const validPassword = await bcrypt.compare(password, user.password);
+    console.log(validPassword);
+    console.log(user);
+    if (!user || !validPassword || !user.active) {
+      res.status(401).json();
     } else {
-      res.json({jwt: generateAccessToken(user.id, user.username, user.role)})
+      res.json({ jwt: generateAccessToken(user.id, user.username, user.role) });
     }
   }
-})
+});
 
-app.post('/register', async (req, res) => {
-  const {username, password} = req.body
-  const user = await prisma.user.findFirst({where: {username: username}})
-  if(!username || !password || user) {
-    res.status(400).json()
+app.post("/register", async (req, res) => {
+  const { username, password } = req.body;
+  const user = await prisma.user.findFirst({ where: { username: username } });
+  if (!username || !password || user) {
+    res.status(400).json();
   } else {
-    const salt = await bcrypt.genSalt(10)
-    const passwordHash = await bcrypt.hash(password, salt)
-    console.log(passwordHash)
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+    console.log(passwordHash);
     const user = await prisma.user.create({
       data: {
         username: username,
         password: passwordHash,
-        active: basicUserStatus
-      }
-    })
-    res.status(201).json()
+        active: basicUserStatus,
+      },
+    });
+    res.status(201).json();
   }
-})
+});
 
-app.use((req, res) => res.status(404).json({ message: 'No route found' }));
+app.post("/activate/:id", async (req, res) => {
+  try {
+    const { password, ...updatedUser } = await prisma.user.update({
+      where: { id: Number(req.params.id) },
+      data: { active: true },
+    });
+
+    res.status(200).json(updatedUser);
+  } catch (err) {
+    res.status(400).json();
+  }
+});
+
+app.get("/users", async (req, res) => {
+  try {
+    const users = await prisma.user.findMany();
+    const mappedUsers = users.map(({ password, ...user }) => user);
+
+    res.status(200).json(mappedUsers);
+  } catch (err) {
+    res.status(400).json();
+  }
+});
+
+app.use((req, res) => res.status(404).json({ message: "No route found" }));
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+  console.log(`App listening on port ${port}`);
+});
