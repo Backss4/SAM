@@ -1,13 +1,16 @@
-import { Prisma, PrismaClient } from "@prisma/client";
 import express from "express";
 import { config } from "dotenv";
 import bcrypt from "bcrypt";
 import cors from "cors";
-import { generateAccessToken } from "./utils/index.mjs";
+import {
+  generateAccessToken,
+  authMiddleware,
+  isAdmin,
+} from "./utils/index.mjs";
+import prisma from "./utils/db.mjs";
 
 config({ path: "./" });
 
-const prisma = new PrismaClient();
 const app = express();
 
 const port = 3001;
@@ -55,7 +58,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
-app.post("/activate/:id", async (req, res) => {
+app.post("/activate/:id", authMiddleware, isAdmin, async (req, res) => {
   try {
     const { password, ...updatedUser } = await prisma.user.update({
       where: { id: Number(req.params.id) },
@@ -68,7 +71,7 @@ app.post("/activate/:id", async (req, res) => {
   }
 });
 
-app.get("/users", async (req, res) => {
+app.get("/users", authMiddleware, isAdmin, async (req, res) => {
   try {
     const users = await prisma.user.findMany();
     const mappedUsers = users.map(({ password, ...user }) => user);
