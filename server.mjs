@@ -8,10 +8,10 @@ import {
   isAdmin,
 } from "./utils/index.mjs";
 import prisma from "./utils/db.mjs";
+import { app, httpServer } from "./utils/serverSetup.mjs";
+import { game } from "./game.mjs";
 
 config({ path: "./" });
-
-const app = express();
 
 const port = 3001;
 
@@ -28,8 +28,6 @@ app.post("/login", async (req, res) => {
   } else {
     const user = await prisma.user.findFirst({ where: { username: username } });
     const validPassword = await bcrypt.compare(password, user.password);
-    console.log(validPassword);
-    console.log(user);
     if (!user || !validPassword || !user.active) {
       res.status(401).json();
     } else {
@@ -46,7 +44,6 @@ app.post("/register", async (req, res) => {
   } else {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
-    console.log(passwordHash);
     const user = await prisma.user.create({
       data: {
         username: username,
@@ -84,6 +81,6 @@ app.get("/users", authMiddleware, isAdmin, async (req, res) => {
 
 app.use((req, res) => res.status(404).json({ message: "No route found" }));
 
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
-});
+game();
+
+httpServer.listen(port);
