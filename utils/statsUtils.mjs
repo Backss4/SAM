@@ -35,3 +35,12 @@ export const addGame = async (playerId) => {
     });
   } catch (err) {}
 };
+
+export const addPowerup = async (playerId) => {
+  try {
+    await prisma.user.update({
+      where: { id: Number(playerId) },
+      data: { numberOfPowerups: { increment: 1 } },
+    });
+  } catch (err) {}
+};

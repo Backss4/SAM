@@ -105,13 +105,20 @@ app.delete("/users/:id", authMiddleware, isAdmin, async (req, res) => {
 app.get("/stats", authMiddleware, async (req, res) => {
   try {
     const {
-      user: { numberOfGames, numberOfWins, numberOfKills, numberOfSuicides },
+      user: {
+        numberOfGames,
+        numberOfWins,
+        numberOfKills,
+        numberOfSuicides,
+        numberOfPowerups,
+      },
     } = req;
     res.status(200).json({
       numberOfKills,
       numberOfSuicides,
       numberOfWins,
       numberOfGames,
+      numberOfPowerups,
     });
   } catch (err) {
     res.status(400).json();

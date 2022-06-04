@@ -17,6 +17,7 @@ model User {
   numberOfSuicides Int     @default(0)
   numberOfGames    Int     @default(0)
   numberOfWins     Int     @default(0)
+  numberOfPowerups     Int     @default(0)
 }
 
 enum Role {

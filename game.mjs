@@ -7,7 +7,13 @@ import {
 } from "./utils/gameUtils.mjs";
 import { decodeToken, resolveUser } from "./utils/index.mjs";
 import { io } from "./utils/serverSetup.mjs";
-import { addGame, addKill, addSuicide, addWin } from "./utils/statsUtils.mjs";
+import {
+  addGame,
+  addKill,
+  addSuicide,
+  addWin,
+  addPowerup,
+} from "./utils/statsUtils.mjs";
 
 const MAX_PLAYERS = 2;
 
@@ -250,6 +256,7 @@ export function game() {
           player.doneSomething = true;
           if (game.map[next.y][next.x].powerup) {
             player.hasPowerup = true;
+            addPowerup(player.socket.user.id);
             clearTimeout(player.powerupTimeout);
             player.powerupTimeout = setTimeout(() => {
               player.hasPowerup = false;
