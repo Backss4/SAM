@@ -16,6 +16,7 @@ export function game() {
     lobby: [],
     started: false,
     starting: false,
+    powerupCounter: 0,
     map: generateNewGame(),
   };
 
@@ -35,6 +36,7 @@ export function game() {
       player.doneSomething = false;
       player.isDead = false;
       player.ready = false;
+      player.hasPowerup = false;
       player.socket.emit("lobbyStatusChange", player.ready);
     });
 
@@ -46,6 +48,7 @@ export function game() {
 
     game.started = false;
     game.starting = false;
+    game.powerupCounter = 0;
     game.map = generateNewGame();
   };
 
@@ -97,6 +100,31 @@ export function game() {
 
   let startingTimeout = null;
 
+  const addPowerup = () => {
+    while (1) {
+      const x = Math.floor(Math.random() * MAP_SIZE);
+      const y = Math.floor(Math.random() * MAP_SIZE);
+
+      if (
+        game.map[y][x].player === null &&
+        game.map[y][x].powerup === 0 &&
+        game.map[y][x].bomb === false &&
+        game.map[y][x].type !== HARD_WALL
+      ) {
+        const id = ++game.powerupCounter;
+        game.map[y][x].powerup = id;
+        setTimeout(() => {
+          if (game.map[y][x].powerup === id) {
+            game.map[y][x].powerup = false;
+          }
+        }, 7000);
+        break;
+      }
+    }
+
+    setTimeout(addPowerup, Math.round(Math.random() * 5000) + 5000);
+  };
+
   const startGame = () => {
     const playersStartingPositions = [
       { x: 0, y: 0, color: "Green" },
@@ -119,6 +147,8 @@ export function game() {
 
       player.socket.join("game");
     });
+
+    setTimeout(addPowerup, Math.random() * 10000);
 
     game.started = true;
     startGameLoop();
@@ -165,6 +195,8 @@ export function game() {
       color: null,
       doneSomething: false,
       isDead: false,
+      hasPowerup: false,
+      powerupTimeout: null,
     };
     game.lobby.push(player);
     console.log(`Player ${socket.user.username} connected`);
@@ -195,30 +227,35 @@ export function game() {
           case "up":
             if (prev.y > 0) {
               next.y--;
-              player.doneSomething = true;
             }
             break;
           case "down":
             if (prev.y < MAP_SIZE - 1) {
               next.y++;
-              player.doneSomething = true;
             }
             break;
           case "left":
             if (prev.x > 0) {
               next.x--;
-              player.doneSomething = true;
             }
             break;
           case "right":
             if (prev.x < MAP_SIZE - 1) {
               next.x++;
-              player.doneSomething = true;
             }
         }
 
         if (playerCanGoThere(prev, next)) {
           player.coords = next;
+          player.doneSomething = true;
+          if (game.map[next.y][next.x].powerup) {
+            player.hasPowerup = true;
+            clearTimeout(player.powerupTimeout);
+            player.powerupTimeout = setTimeout(() => {
+              player.hasPowerup = false;
+            }, 10000);
+            game.map[next.y][next.x].powerup = 0;
+          }
           updateMap(prev, player);
         }
       }
@@ -226,7 +263,7 @@ export function game() {
 
     socket.on("placeBomb", () => {
       if (game.started && !player.isDead) {
-        const bomb = { ...player.coords, length: 3 };
+        const bomb = { ...player.coords, length: player.hasPowerup ? 6 : 3 };
         if (!game.map[bomb.y][bomb.x].bomb) {
           game.map[bomb.y][bomb.x].bomb = true;
 

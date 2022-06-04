@@ -14,7 +14,7 @@ export const generateNewGame = () => {
           type: EMPTY_PLACE,
           player: null,
           bomb: false,
-          powerup: false,
+          powerup: 0,
           explosion: [],
         }))
     );
