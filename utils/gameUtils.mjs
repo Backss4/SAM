@@ -15,7 +15,7 @@ export const generateNewGame = () => {
           player: null,
           bomb: false,
           powerup: false,
-          explosion: false,
+          explosion: [],
         }))
     );
 
@@ -54,4 +54,97 @@ export const generateNewGame = () => {
   map[1][MAP_SIZE - 1].type = EMPTY_PLACE;
 
   return map;
+};
+
+export const updateMapWithExplosion = (map, bomb, sign = "+", id) => {
+  if (sign === "+") map[bomb.y][bomb.x].explosion.push(id);
+  else
+    map[bomb.y][bomb.x].explosion = map[bomb.y][bomb.x].explosion.filter(
+      (s) => s !== id
+    );
+
+  let count = 0;
+  let y = bomb.y;
+
+  // expand explosion on 4 sides
+
+  while (count < bomb.length && y >= 0) {
+    if (map[y][bomb.x].type === HARD_WALL) {
+      break;
+    }
+    if (map[y][bomb.x].type === BOX_PLACE) {
+      map[y][bomb.x].type = EMPTY_PLACE;
+    }
+
+    if (sign === "+") map[y][bomb.x].explosion.push(id);
+    else
+      map[y][bomb.x].explosion = map[y][bomb.x].explosion.filter(
+        (s) => s !== id
+      );
+
+    count++;
+    y--;
+  }
+  count = 0;
+  y = bomb.y;
+
+  while (count < bomb.length && y <= MAP_SIZE - 1) {
+    if (map[y][bomb.x].type === HARD_WALL) {
+      break;
+    }
+    if (map[y][bomb.x].type === BOX_PLACE) {
+      map[y][bomb.x].type = EMPTY_PLACE;
+    }
+
+    if (sign === "+") map[y][bomb.x].explosion.push(id);
+    else
+      map[y][bomb.x].explosion = map[y][bomb.x].explosion.filter(
+        (s) => s !== id
+      );
+
+    count++;
+    y++;
+  }
+
+  count = 0;
+  let x = bomb.x;
+
+  while (count < bomb.length && x >= 0) {
+    if (map[bomb.y][x].type === HARD_WALL) {
+      break;
+    }
+    if (map[bomb.y][x].type === BOX_PLACE) {
+      map[bomb.y][x].type = EMPTY_PLACE;
+    }
+
+    if (sign === "+") map[bomb.y][x].explosion.push(id);
+    else
+      map[bomb.y][x].explosion = map[bomb.y][x].explosion.filter(
+        (s) => s !== id
+      );
+
+    count++;
+    x--;
+  }
+
+  count = 0;
+  x = bomb.x;
+
+  while (count < bomb.length && x <= MAP_SIZE - 1) {
+    if (map[bomb.y][x].type === HARD_WALL) {
+      break;
+    }
+    if (map[bomb.y][x].type === BOX_PLACE) {
+      map[bomb.y][x].type = EMPTY_PLACE;
+    }
+
+    if (sign === "+") map[bomb.y][x].explosion.push(id);
+    else
+      map[bomb.y][x].explosion = map[bomb.y][x].explosion.filter(
+        (s) => s !== id
+      );
+
+    count++;
+    x++;
+  }
 };

@@ -8,7 +8,7 @@ import {
   isAdmin,
 } from "./utils/index.mjs";
 import prisma from "./utils/db.mjs";
-import { app, httpServer } from "./utils/serverSetup.mjs";
+import { app, httpServer, io } from "./utils/serverSetup.mjs";
 import { game } from "./game.mjs";
 
 config({ path: "./" });
@@ -27,6 +27,10 @@ app.post("/login", async (req, res) => {
     res.status(400).json();
   } else {
     const user = await prisma.user.findFirst({ where: { username: username } });
+    if (!user) {
+      res.status(400).json();
+      return;
+    }
     const validPassword = await bcrypt.compare(password, user.password);
     if (!user || !validPassword || !user.active) {
       res.status(401).json();
@@ -74,6 +78,41 @@ app.get("/users", authMiddleware, isAdmin, async (req, res) => {
     const mappedUsers = users.map(({ password, ...user }) => user);
 
     res.status(200).json(mappedUsers);
+  } catch (err) {
+    res.status(400).json();
+  }
+});
+
+app.delete("/users/:id", authMiddleware, isAdmin, async (req, res) => {
+  try {
+    io.sockets.sockets.forEach((soc) => {
+      if (soc.user.id === Number(req.params.id)) {
+        soc.disconnect(true);
+      }
+    });
+
+    await prisma.user.delete({
+      where: { id: Number(req.params.id) },
+    });
+
+    res.status(200).json();
+  } catch (err) {
+    console.log(err);
+    res.status(400).json();
+  }
+});
+
+app.get("/stats", authMiddleware, async (req, res) => {
+  try {
+    const {
+      user: { numberOfGames, numberOfWins, numberOfKills, numberOfSuicides },
+    } = req;
+    res.status(200).json({
+      numberOfKills,
+      numberOfSuicides,
+      numberOfWins,
+      numberOfGames,
+    });
   } catch (err) {
     res.status(400).json();
   }

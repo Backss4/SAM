@@ -8,11 +8,15 @@ generator client {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username     String   @unique
-  password     String
-  role         Role @default(user)
-  active       Boolean
+  id               Int     @id @default(autoincrement())
+  username         String  @unique
+  password         String
+  role             Role    @default(user)
+  active           Boolean
+  numberOfKills    Int     @default(0)
+  numberOfSuicides Int     @default(0)
+  numberOfGames    Int     @default(0)
+  numberOfWins     Int     @default(0)
 }
 
 enum Role {

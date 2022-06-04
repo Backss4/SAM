@@ -3,9 +3,11 @@ import {
   MAP_SIZE,
   BOX_PLACE,
   HARD_WALL,
+  updateMapWithExplosion,
 } from "./utils/gameUtils.mjs";
 import { decodeToken, resolveUser } from "./utils/index.mjs";
 import { io } from "./utils/serverSetup.mjs";
+import { addGame, addKill, addSuicide, addWin } from "./utils/statsUtils.mjs";
 
 const MAX_PLAYERS = 2;
 
@@ -17,16 +19,80 @@ export function game() {
     map: generateNewGame(),
   };
 
-  let gameLoopTimeout = null;
+  const endGame = () => {
+    let timeout = setTimeout(() => {}, 0);
+    while (--timeout >= 0) {
+      clearTimeout(timeout);
+      timeout--;
+    }
+
+    game.lobby = game.lobby.filter((player) => player.socket.connected);
+    const playersInGame = game.lobby.filter((player) => player.ready);
+
+    game.lobby.forEach((player) => {
+      player.coords = null;
+      player.color = null;
+      player.doneSomething = false;
+      player.isDead = false;
+      player.ready = false;
+      player.socket.emit("lobbyStatusChange", player.ready);
+    });
+
+    io.to("game").emit("gameEnded");
+
+    playersInGame.forEach((player) => {
+      player.socket.leave("game");
+    });
+
+    game.started = false;
+    game.starting = false;
+    game.map = generateNewGame();
+  };
 
   const startGameLoop = () => {
-    io.to("game").emit("gameDetails", { map: game.map });
     game.lobby.forEach((player) => {
       if (player.ready) {
+        if (game.map[player.coords.y][player.coords.x].explosion.length > 0) {
+          player.isDead = true;
+          if (
+            game.map[player.coords.y][player.coords.x].explosion.includes(
+              player.socket.user.id
+            )
+          ) {
+            addSuicide(player.socket.user.id);
+          } else {
+            game.map[player.coords.y][player.coords.x].explosion.forEach(
+              (id) => {
+                addKill(id);
+              }
+            );
+          }
+
+          game.map[player.coords.y][player.coords.x].player = null;
+          player.socket.emit("killed");
+        }
         player.doneSomething = false;
       }
     });
-    gameLoopTimeout = setTimeout(startGameLoop, 350);
+    io.to("game").emit("gameDetails", { map: game.map });
+
+    const playersAlive = game.lobby.filter(
+      (player) => player.ready && !player.isDead
+    );
+
+    if (playersAlive.length === 1) {
+      game.lobby.forEach((p) => {
+        if (p.ready) {
+          addGame(p.socket.user.id);
+        }
+      });
+      addWin(playersAlive[0].socket.user.id);
+      // ending game;
+      endGame();
+      return;
+    }
+
+    setTimeout(startGameLoop, 350);
   };
 
   let startingTimeout = null;
@@ -98,6 +164,7 @@ export function game() {
       coords: null,
       color: null,
       doneSomething: false,
+      isDead: false,
     };
     game.lobby.push(player);
     console.log(`Player ${socket.user.username} connected`);
@@ -112,7 +179,6 @@ export function game() {
         }
       }
     });
-
     socket.on("notReady", () => {
       if (!game.starting) {
         player.ready = false;
@@ -121,7 +187,7 @@ export function game() {
     });
 
     socket.on("changePos", ({ direction }) => {
-      if (game.started && !player.doneSomething) {
+      if (game.started && !player.doneSomething && !player.isDead) {
         const prev = { ...player.coords };
         const next = { ...player.coords };
 
@@ -158,18 +224,45 @@ export function game() {
       }
     });
 
+    socket.on("placeBomb", () => {
+      if (game.started && !player.isDead) {
+        const bomb = { ...player.coords, length: 3 };
+        if (!game.map[bomb.y][bomb.x].bomb) {
+          game.map[bomb.y][bomb.x].bomb = true;
+
+          // wait for destonation
+          setTimeout(() => {
+            if (!game.started) return;
+            game.map[bomb.y][bomb.x].bomb = false;
+            updateMapWithExplosion(game.map, bomb, "+", player.socket.user.id);
+
+            setTimeout(() => {
+              if (!game.started) return;
+              updateMapWithExplosion(
+                game.map,
+                bomb,
+                "-",
+                player.socket.user.id
+              );
+            }, 1000);
+          }, 2000);
+        }
+      }
+    });
+
     socket.on("disconnect", () => {
       console.log(`Player ${socket.user.username} disconnected`);
+      socket.disconnect(true);
       if (player.ready && game.starting && !game.started) {
         game.starting = false;
         clearTimeout(startingTimeout);
       }
-      socket.leave("game");
-      game.lobby = game.lobby.filter((p) => p.socket.id !== socket.id);
 
-      if (game.started) {
-        // todo: remove from player list or not idk XD
+      if (!game.started) {
+        game.lobby = game.lobby.filter((p) => p.socket.id !== socket.id);
       }
+
+      socket.leave("game");
     });
   });
 }
