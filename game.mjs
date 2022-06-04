@@ -106,7 +106,7 @@ export function game() {
 
   let startingTimeout = null;
 
-  const addPowerup = () => {
+  const addPowerupToMap = () => {
     while (1) {
       const x = Math.floor(Math.random() * MAP_SIZE);
       const y = Math.floor(Math.random() * MAP_SIZE);
@@ -120,15 +120,17 @@ export function game() {
         const id = ++game.powerupCounter;
         game.map[y][x].powerup = id;
         setTimeout(() => {
-          if (game.map[y][x].powerup === id) {
-            game.map[y][x].powerup = false;
+          if (game.started) {
+            if (game.map[y][x].powerup === id) {
+              game.map[y][x].powerup = false;
+            }
           }
         }, 7000);
         break;
       }
     }
 
-    setTimeout(addPowerup, Math.round(Math.random() * 5000) + 5000);
+    setTimeout(addPowerupToMap, Math.round(Math.random() * 5000) + 5000);
   };
 
   const startGame = () => {
@@ -154,7 +156,7 @@ export function game() {
       player.socket.join("game");
     });
 
-    setTimeout(addPowerup, Math.random() * 10000);
+    setTimeout(addPowerupToMap, Math.random() * 10000);
 
     game.started = true;
     startGameLoop();

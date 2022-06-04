@@ -58,10 +58,10 @@ export const generateNewGame = () => {
 
 export const updateMapWithExplosion = (map, bomb, sign = "+", id) => {
   if (sign === "+") map[bomb.y][bomb.x].explosion.push(id);
-  else
-    map[bomb.y][bomb.x].explosion = map[bomb.y][bomb.x].explosion.filter(
-      (s) => s !== id
-    );
+  else {
+    const index = map[bomb.y][bomb.x].explosion.indexOf(id);
+    map[bomb.y][bomb.x].explosion.splice(index, index + 1);
+  }
 
   let count = 0;
   let y = bomb.y;
@@ -77,10 +77,10 @@ export const updateMapWithExplosion = (map, bomb, sign = "+", id) => {
     }
 
     if (sign === "+") map[y][bomb.x].explosion.push(id);
-    else
-      map[y][bomb.x].explosion = map[y][bomb.x].explosion.filter(
-        (s) => s !== id
-      );
+    else {
+      const index = map[y][bomb.x].explosion.indexOf(id);
+      map[y][bomb.x].explosion.splice(index, index + 1);
+    }
 
     count++;
     y--;
@@ -97,10 +97,10 @@ export const updateMapWithExplosion = (map, bomb, sign = "+", id) => {
     }
 
     if (sign === "+") map[y][bomb.x].explosion.push(id);
-    else
-      map[y][bomb.x].explosion = map[y][bomb.x].explosion.filter(
-        (s) => s !== id
-      );
+    else {
+      const index = map[y][bomb.x].explosion.indexOf(id);
+      map[y][bomb.x].explosion.splice(index, index + 1);
+    }
 
     count++;
     y++;
@@ -118,10 +118,10 @@ export const updateMapWithExplosion = (map, bomb, sign = "+", id) => {
     }
 
     if (sign === "+") map[bomb.y][x].explosion.push(id);
-    else
-      map[bomb.y][x].explosion = map[bomb.y][x].explosion.filter(
-        (s) => s !== id
-      );
+    else {
+      const index = map[bomb.y][x].explosion.indexOf(id);
+      map[bomb.y][x].explosion.splice(index, index + 1);
+    }
 
     count++;
     x--;
@@ -139,10 +139,10 @@ export const updateMapWithExplosion = (map, bomb, sign = "+", id) => {
     }
 
     if (sign === "+") map[bomb.y][x].explosion.push(id);
-    else
-      map[bomb.y][x].explosion = map[bomb.y][x].explosion.filter(
-        (s) => s !== id
-      );
+    else {
+      const index = map[bomb.y][x].explosion.indexOf(id);
+      map[bomb.y][x].explosion.splice(index, index + 1);
+    }
 
     count++;
     x++;

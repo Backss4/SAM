@@ -6,16 +6,41 @@ import {
   generateAccessToken,
   authMiddleware,
   isAdmin,
+  makeId,
 } from "./utils/index.mjs";
 import prisma from "./utils/db.mjs";
 import { app, httpServer, io } from "./utils/serverSetup.mjs";
 import { game } from "./game.mjs";
+import { Auth, google } from "googleapis";
 
 config({ path: "./" });
 
 const port = 3001;
 
 const basicUserStatus = Boolean(Number(process.env.BASIC_USER_STATUS));
+
+const oAuthClient = new Auth.OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_SECRET
+);
+
+(async () => {
+  try {
+    if (!(await prisma.user.findFirst({ where: { role: "admin" } }))) {
+      console.log("Creating admin");
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash("123", salt);
+      await prisma.user.create({
+        data: {
+          username: "admin",
+          password: passwordHash,
+          active: true,
+          role: "admin",
+        },
+      });
+    }
+  } catch (err) {}
+})();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -37,6 +62,32 @@ app.post("/login", async (req, res) => {
     } else {
       res.json({ jwt: generateAccessToken(user.id, user.username, user.role) });
     }
+  }
+});
+
+app.post("/oauth", async (req, res) => {
+  try {
+    const { token } = req.body;
+    const tokenInfo = await oAuthClient.getTokenInfo(token);
+    const email = tokenInfo.email;
+
+    let user = await prisma.user.findFirst({ where: { username: email } });
+    if (!user) {
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(makeId(20), salt);
+      user = await prisma.user.create({
+        data: {
+          username: email,
+          password: passwordHash,
+          active: true,
+        },
+      });
+    }
+
+    res.json({ jwt: generateAccessToken(user.id, user.username, user.role) });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json();
   }
 });
 
