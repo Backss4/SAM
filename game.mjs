@@ -107,6 +107,7 @@ export function game() {
   let startingTimeout = null;
 
   const addPowerupToMap = () => {
+    if (!game.started) return;
     while (1) {
       const x = Math.floor(Math.random() * MAP_SIZE);
       const y = Math.floor(Math.random() * MAP_SIZE);
