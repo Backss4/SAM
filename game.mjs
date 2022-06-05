@@ -101,7 +101,7 @@ export function game() {
       return;
     }
 
-    setTimeout(startGameLoop, 350);
+    setTimeout(startGameLoop, 200);
   };
 
   let startingTimeout = null;
@@ -159,6 +159,14 @@ export function game() {
     setTimeout(addPowerupToMap, Math.random() * 10000);
 
     game.started = true;
+
+    const playersInGame = players.map((p) => ({
+      username: p.socket.user.username,
+      color: p.color,
+    }));
+
+    io.to("game").emit("playersInGame", playersInGame);
+
     startGameLoop();
   };
 

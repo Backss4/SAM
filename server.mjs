@@ -11,7 +11,7 @@ import {
 import prisma from "./utils/db.mjs";
 import { app, httpServer, io } from "./utils/serverSetup.mjs";
 import { game } from "./game.mjs";
-import { Auth, google } from "googleapis";
+import { Auth } from "googleapis";
 
 config({ path: "./" });
 
