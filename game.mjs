@@ -89,13 +89,15 @@ export function game() {
       (player) => player.ready && !player.isDead
     );
 
-    if (playersAlive.length === 1) {
+    if (playersAlive.length <= 1) {
       game.lobby.forEach((p) => {
         if (p.ready) {
           addGame(p.socket.user.id);
         }
       });
-      addWin(playersAlive[0].socket.user.id);
+      if (playersAlive.length === 1) {
+        addWin(playersAlive[0].socket.user.id);
+      }
       // ending game;
       endGame();
       return;
