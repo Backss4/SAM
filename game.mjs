@@ -128,7 +128,7 @@ export function game() {
               game.map[y][x].powerup = false;
             }
           }
-        }, 7000);
+        }, Math.round(Math.random() * 10000) + 5000);
         break;
       }
     }
