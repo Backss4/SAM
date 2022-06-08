@@ -60,7 +60,7 @@ export const updateMapWithExplosion = (map, bomb, sign = "+", id) => {
   if (sign === "+") map[bomb.y][bomb.x].explosion.push(id);
   else {
     const index = map[bomb.y][bomb.x].explosion.indexOf(id);
-    map[bomb.y][bomb.x].explosion.splice(index, index + 1);
+    map[bomb.y][bomb.x].explosion.splice(index, 1);
   }
 
   let count = 0;
@@ -79,7 +79,7 @@ export const updateMapWithExplosion = (map, bomb, sign = "+", id) => {
     if (sign === "+") map[y][bomb.x].explosion.push(id);
     else {
       const index = map[y][bomb.x].explosion.indexOf(id);
-      map[y][bomb.x].explosion.splice(index, index + 1);
+      map[y][bomb.x].explosion.splice(index, 1);
     }
 
     count++;
@@ -99,7 +99,7 @@ export const updateMapWithExplosion = (map, bomb, sign = "+", id) => {
     if (sign === "+") map[y][bomb.x].explosion.push(id);
     else {
       const index = map[y][bomb.x].explosion.indexOf(id);
-      map[y][bomb.x].explosion.splice(index, index + 1);
+      map[y][bomb.x].explosion.splice(index, 1);
     }
 
     count++;
@@ -120,7 +120,7 @@ export const updateMapWithExplosion = (map, bomb, sign = "+", id) => {
     if (sign === "+") map[bomb.y][x].explosion.push(id);
     else {
       const index = map[bomb.y][x].explosion.indexOf(id);
-      map[bomb.y][x].explosion.splice(index, index + 1);
+      map[bomb.y][x].explosion.splice(index, 1);
     }
 
     count++;
@@ -141,7 +141,7 @@ export const updateMapWithExplosion = (map, bomb, sign = "+", id) => {
     if (sign === "+") map[bomb.y][x].explosion.push(id);
     else {
       const index = map[bomb.y][x].explosion.indexOf(id);
-      map[bomb.y][x].explosion.splice(index, index + 1);
+      map[bomb.y][x].explosion.splice(index, 1);
     }
 
     count++;
