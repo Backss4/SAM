@@ -15,7 +15,7 @@ import {
   addPowerup,
 } from "./utils/statsUtils.mjs";
 
-const MAX_PLAYERS = 2;
+const MAX_PLAYERS = 4;
 
 export function game() {
   const game = {
@@ -60,7 +60,7 @@ export function game() {
 
   const startGameLoop = () => {
     game.lobby.forEach((player) => {
-      if (player.ready) {
+      if (player.ready && !player.isDead) {
         if (game.map[player.coords.y][player.coords.x].explosion.length > 0) {
           player.isDead = true;
           if (
