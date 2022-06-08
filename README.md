@@ -21,4 +21,4 @@ Example configuration is available in .env.example
 
 ## Running:
 
-npm start or node index.js
+npm start or node server.mjs
